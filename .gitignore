@@ -33,5 +33,5 @@
 
 #Dropbox
 RemoteSystemsTempFiles/
-.DS_Store
+!/.DS_Store
 
