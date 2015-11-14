@@ -30,3 +30,8 @@
 
 # Debug files
 *.dSYM/
+
+#Dropbox
+RemoteSystemsTempFiles/
+.DS_Store
+
