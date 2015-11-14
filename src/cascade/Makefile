@@ -1,11 +1,13 @@
 #
 #    Automatically Generated Makefile Include
-#    Fri Jun 28 19:31:59 EDT 1996
+#    Sat Nov 14 17:19:04 EST 2015
 #
-#    Configured for FreeBSD
+#
+#    Configured for Darwin
 
 CC=cc
-MACHDEP_CFLAGS= -m486 -ansi -DFreeBSD
+MACHDEP_CFLAGS=-Ofast
+
 #	CMU Cascade Neural Network Simulator (CNNS)
 #
 #	v1.0
