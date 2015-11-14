@@ -1,0 +1,18 @@
+;XOR Benchmark Data Set
+;Maintainer: neural-bench@cs.cmu.edu
+
+$SETUP
+Nseries:      3;
+series[1..3]: binary;
+
+train: for i = begin to end
+         series[1,i],series[2,i] => series[3,i];
+
+$DATA
+
+[begin]
++, +, -;
++, -, +;
+-, +, +;
+-, -, -;
+[end]

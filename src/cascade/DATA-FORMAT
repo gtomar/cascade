@@ -1,0 +1,443 @@
+CMU Learning Benchmark Archive
+Data File Format  v2.0  (6/6/94)
+
+Maintainer:  neural-bench@cs.cmu.edu
+
+This file contains a description of the standard format for data files in the
+CMU learning benchmark collection.  These files are a supplement to the
+benchmark description files that comprise the CMU benchmark collection.  Data
+files are associated to their appropiate description file with a '.data'
+extension to the file name of the benchmark description.
+
+
+STRUCTURE
+---------
+Each data file is divided into two parts the SETUP section and the DATA
+section.  The DATA section is where all the raw data is stored.  This data
+takes the form of lists of continuous, binary and enumerated values.  The
+SETUP section describes what each of the items in these lists are, and how
+to transform them into a simple input->output mapping.
+
+We mark the beginning of the setup section in the data files with a
+'$SETUP'.  The setup section must precede that data section and is assumed to
+continue until the marker for the beginning of the data section is 
+encountered.  This marker is '$DATA'.  The data section continues until the
+end of the file.  Thus, the general form of the data file is:
+
+    $SETUP
+
+    ...<setup instructions>...
+
+    $DATA
+
+    ...<data instructions>...
+
+    <end of file>
+
+
+
+SETUP SECTION
+-------------
+The setup section exists to do two things.  The first is to describe the
+data to the parser and the second is to describe how to turn that data into
+simple input->output vectors through some mapping.  This is the most
+important part of the data file, so careful attention should be paid to
+writing this description.
+
+
+DESCRIBING THE DATA
+===================
+Data is organized into a number of series.  Each series contains a single
+type of information about the problem.  At this point, no differentiation
+is made between inputs and outputs (you provide that information with the
+mapping, described below).
+
+We start describing the series by providing a number of series.  This is
+done by using the 'Nseries:' directive.  Note that directives are  NOT
+case sensitive (but identifiers are, see below), so 'nseries:' works just 
+as well.  Follow this directive with an integer describing the number of 
+series you want.  For example, XOR has 2 inputs and 1 output, and so has a
+total of 3 series.  This looks like:
+
+    Nseries: 3;
+
+in the data file.  Notice that there is a semicolon after the number three.
+This is the terminating charater for the data file format and must be
+present at the end of nearly every command for the data to parse correctly.
+There are a few notable exceptions to this rule (see below).
+
+Having provided a number of series, we must now indicate what goes into
+each of these series.  The directive for this is 'series[<n>]: <type>;'.
+The <n> is the number of the series that you are describing (there is
+nothing saying that the series need be described in order).  Valid numbers
+begin with '1' and continues through the number you indicated for 'Nseries'.
+Indices outside the domain are not allowed.  Each series can have one of
+four types: CONTinuous, BINARY, ENUMerated or BINary ENUMerated.  These
+are described as follows:
+
+Continuous:  Continuous data is for floating point numbers.  These
+  values are guaranteed only to single precision.  Continuous data
+  is represented to the network as a single input/output unit.  
+  Continuous data is denoted by type 'cont'.  
+
+    Example:
+      series[3]: cont;
+
+
+Binary:  Binary data is simple on/off values.  These values will be
+  denoted by '+' (affirmative) and '-' (negative) in the data section.
+  These '+/-'s will be turned into values specified by the program being
+  benchmarked.  For example, a program could specify {-0.5,0.5} and another
+  could specify {0.0, 1.0}.  Binary data is represented to the network as a 
+  single input/output unit.  Binary data is denoted by type 'binary'.
+
+    Example:
+      series[2]: binary;
+
+
+Enumerated:  Enumerated data is similar to enumerated types in either
+  Pascal or C.  Enumerated data is denoted by an 'enum {<list>}'.
+  The list is of possible enumerated values for that series.  This list
+  should be enclosed between curly braces and delimited by commas.
+
+  Enumerated data is represented to the network with one binary unit
+  for each enumeration in the list.  Each unit will be 'on' if it
+  corresponds to the element of the list present in the series.  All
+  other units are off.  In effect, this means that at every point there
+  will be one unit on with the rest off.
+
+  Care should be taken when chosing identifiers for use as enumerated
+  types.  An enumerated must be a single word (no whitespace), NOT be a
+  reserved word and not be a number.  An exception to this is if a
+  reserved word or number is immediately preceded by an apostrophe.
+  Hyphenated words are not allowed (at all).  
+
+    Examples:
+      series[42]: enum { hid, hId, hEd, hAd, hYd, had, hOd, hod,
+                         hUd, hud, hed };
+      series[69]: enum { coil, helix, sheet };
+
+
+Binary Enumerated:  Binary enumerated types differ from standard
+  enumerated types only in how data is represented to the network.
+  Syntax for usage and rules for the identifiers remain the same.
+
+  Binary enumerated data, or 'BinEnums' is represented to the network
+  similarly to a binary number.  That is to say we assign each
+  enumeration an integer value and then, from the binary representation
+  of that integer, we assign on/off values to the units.  Thus, if we
+  have a binenum with 7 enumerations, we assign the third one the value
+  '3', which is binary 011, and will be represented to the network as
+  three binary units, the first off and the second two on.
+
+  It is obvious that binenums can be represented to the network with
+  fewer units than regular enums.  To be exact, a binenum will be
+  represented to the network with log (base 2) <n>, where <n> is the
+  number of enumerations.  While this may be useful when the number of
+  enumerations is large, it should be noted that these binary
+  enumerations are, in general, harder for most algorithms to learn and
+  should probably be used sparingly.
+
+    Example:
+      series[1]: { a, b, c, d, e, f, g, h, i, k, l, m, n, o, p,
+                   r, s, t, u, v, w, x, y, z, A, C, D, E, G, I,
+                   J, K, L, M, N, O, Q, R, S, T, U, W, X, Y, Z,
+                   @, !, #, *, ^, '+, '- };
+      series[2]: { >, <, '0, '2, '1 };
+
+    Note that these examples, from the NETtalk corpus, make use of
+    the apostrophing of reserved words (see above). 
+
+RANGES:  A range is way of declaring the types of several series at once.  This
+  is done when you are selecting a series number.  In between the square
+  brackets, instead of a single integer, place a '..' in between two integers 
+  that indicate the first and last (respectively) series that you want to have
+  the same type.  For example, if you wish to have the first three series in a
+  data set to be of type 'binary', you could type:
+
+      series[1..3]: binary;
+
+  instead of:
+
+      series[1]: binary;
+      series[2]: binary;
+      series[3]: binary;
+
+
+MAPPINGS
+========
+The data has now been described to the parser.  It remains to tell the
+parser how to transform this data into input->output vectors.  We do this
+through a mapping, which should follow the descriptions of the series.  A
+mapping has the syntax:
+
+    <name>:  for <identifier> = <start> to <end> [step <step size>]
+               series[<series num>, <identifier>[+/- some number]],
+               ...
+               series[<series num>, <identifier>[+/- some number]]  =>
+               series[<series num>, <identifier>[+/- some number]],
+               ...
+               series[<series num>, <identifier>[+/- some number]],
+
+This defines a an index, referred to as 'identifier' that should range
+from <start> to <end> incrementing by <step size> (default is 1) at each 
+iteration.  At each iteration, the parser references all the series before
+the '=>' as INPUTS.  The remainder of the series on the line are considered
+OUTPUTS (a mapping need not have ANY outputs if none are desired, such as data
+sets that are not intended for training, but meant to provide a set of network
+inputs).  The 'series num' is the number you assigned to the desired series 
+when you declared its type.  This means that 'series[42]: binary;' has a series
+number of '42'.  The second index indicates which element of that series you 
+wish to reference.  This will always be based upon the identifier you chose for
+the for loop.  However, you can offset this if you wish, a feature useful for 
+predicting time series such as:
+
+    $SETUP
+
+    Nseries: 1;
+    series[1]: cont;
+
+    foo: for i = 1 to 500
+           series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+           series[1,i+20];
+
+which is a sample setup for predicting a time series.  You may note that for
+values of 'i' less than 19, this mapping will reference points that do not
+exist.  There are two ways of handling this.  The first is to make 'i' range
+19 instead of 1.  However, if you choose not to do this, the parser will cope
+with it automatically.  Continuous values that 'off the edge' are replaced
+with their arithmatic means.  Binary, enumerated and binary enumerated series
+will have all their units set to halfway between the on and off positions.
+
+NOTE:  When constructing mappings, all mappings in a data file should have the
+same number of inputs and outputs.  The exception to this is if a mapping has
+NO outputs, which is allowed regardless.  In addition, the inputs and outpus
+must reference the same series at the same place in the mapping (although they
+can be offset from the index differently).
+
+It is also possible to indicate a number of mappings by simply adding more
+'for' constructs like:
+
+    $SETUP
+
+    Nseries:   1;
+    series[1]: cont;
+
+    foo:  for i = 1 to 500
+            series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+            series[1,i+20];
+
+    bar:  for i = 501 to 1000
+            series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+            series[1,i+20];
+
+which construct two sets of data, one from 1 to 500 and another from 501 to
+1000.  These series will be labeled by the parser with their names so that
+the first mapping would be referred to as 'foo' and the second one as 'bar'.  
+This is a fairly clumsy method for indicating data sets, and so another one is
+provided as well.
+
+In addition to referencing a data set by its name, you can label them with
+one of four labels: train (for training data), validate (for cross validation
+during training), test (for testing after training) and predict (data that
+is for prediction only).  An example of using these labels would be:
+
+    $SETUP
+
+    Nseries:   1;
+    series[1]: cont;
+
+    train: for i = 1 to 250
+             series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+             series[1,i+20];
+
+    validate: for i = 251 to 500
+                series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+                series[1,i+20];
+
+    test: for i = 501 to 1000 step 2
+            series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+            series[1,i+20];
+
+    predict: for i = 502 to 1000 step 2
+               series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>;
+
+these sets of data would then be marked by the parser as data for training,
+validation, testing and predicting.  Note that this does not preclude the use
+of other, miscellaniously named, data sets.
+
+Up until now, the only way to run the indices is by providing starting and
+stopping numbers.  This is fine if you know exactly how much data you have.
+However, if you don't (and don't want to count), all is not lost.  There is a
+mechanism, which will be described under $DATA, for inserting labels into the
+data.  Essentially, a label is an identifier that you can reference while
+constructing your 'for' statements.  These identifiers can be offset the same
+way the identifiers that reference the series can be.  An example of this,
+assuming that the data has been appropriately labeled, is:
+
+    $SETUP
+
+    Nseries:   1;
+    series[1]: cont;
+
+    train: for i = tag1 to tag2
+             series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+             series[1,i+20];
+
+    validate: for i = tag2 to tag3
+                series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+                series[1,i+20];
+
+    test: for i = tag3 to tag4 step 2
+            series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>
+            series[1,i+20];
+
+    predict: for i = tag3+1 to tag4 step 2
+               series[1,i],series[1,i-6],series[1,i-12],series[1,i-18]  =>;
+
+Which is the same as the declaration described above.
+
+NOTE:  When constructing mappings, all mappings in a data file should have the
+same number of inputs and outputs.  The exception to this is if a mapping has
+NO outputs, which is allowed regardless.  In addition, the inputs and outputs
+must reference the same series at the same place in the mapping (although they
+can be offset from the index differently).
+
+
+DATA
+----
+The majority of the data section is just that, data.  On each line of the data
+section there should be one element from each series declared in the SETUP
+section, regardless of whether it was actually referenced by a mapping.  There
+should be a semicolon at the end of the line.  If a large number of series were
+declared, it may not all fit comfortably on a single line, this doesn't matter
+as the semicolon is taken as the end of the line, not the carriage return.
+
+Here's an example of data from the XOR data file:
+
+    $DATA
+
+    +, +, -;
+    +, -, +;
+    -, +, +;
+    -, -, -;
+
+No suprises here.
+
+LABELS:  As promised above, one can define labels within the data file.  This
+  is done by inserting a '[<identifier>]' in the data.  You can then
+  reference that <identifier> as described above.  For example:
+
+      $DATA
+
+      [begin]
+      +, +, -;
+      +, -, +;
+      -, +, +;
+      -, -, -;
+      [end]
+
+
+BLOCKS:  A block is a method of preventing the parser from looking beyond a
+  certain point in a data series, even if the offsets in a series reference 
+  calls for it.  It works like this:  The value of your index is computed 
+  according to the mapping you provided.  The value of a series' cell is 
+  calculated from that index.  If there is a block in between the value of the 
+  index and the cell, then that reference is treated as being off the end of 
+  the data.
+
+  A block is designated by a '#'.
+
+  Take this example from the nettalk corpus:
+
+      r, r, <;
+      k, k, <;
+      #, #, #;
+      a, x, '0;
+      b, b, >;
+
+  Here the blocks represent the end of one word and the start of another.  They
+  prevent one word from running into another.
+
+
+SEGMENT MARKERS:  Related to a block is a segment marker, denoted by a '##',
+  with no semicolon.  Segment markers serve as blocks across all the series on 
+  a line.  In addition, segment markers are a sort of generic label.  That is, 
+  if you have something in your data file such as:
+
+    for i = begin+3 to end
+      ...
+
+  and then come across a segment marker in the data, the data will restart 
+  three points after the segment marker.  Similarly with any modfications that
+  are made to the stopping point:
+
+    for i = begin to end-3
+      ...
+
+  will stop three points before the segment marker.  Here's the block example 
+  again, using segment markers:
+
+      r, r, <;
+      k, k, <;
+      ##
+      a, x, '0;
+      b, b, >;
+
+  Note that if we used the skeletons of the mappings listed above and had
+  'for i = begin+3 to end-3', then this would not be equivelant to the block
+  example.  That's because a segment marker would cause the parser to skip
+  the three points before and after while a block would still cause no points
+  to be skipped.  The advantage of a block is that you CAN block only one
+  series while a segment marker always covers all the series.
+
+
+UNKNOWNS:  An unknown is any data point which is not known.  You can represent
+  this with a '?' instead of an otherwise valid token (number, binary value,
+  whatever).  A value marked with a ? is treated the same as references off the
+  end of data.  That is continuous values are given the arithmatic mean of that
+  series and others are set to halfway between on and off.  An example of this
+  might be:
+
+      r, r, <;
+      ?, k, <;
+      ##
+      a, ?, '0;
+      b, b, >;
+
+
+OTHER STUFF
+-----------
+DELIMITERS:  These are characters that are used to differentiate from one
+  token to the next.  Make sure that you have at least one of them in between
+  each word, identifier, ect.  Delimiters should NOT be used as identifiers
+  unless preceded by an apostrophe (and even then not whitespace).
+
+  Delimiters: ',', :, [, ], {, }, ;, +, -, =, =>, .., <whitespace>
+
+  Other than its use as a delimiter, whitespace is not important.
+
+CASE:  The only things that are case sensitive to this format are those 
+  identifiers that are supplied as enumerated values and indices to the 
+  mappings.  Other than that, you are free to capitalize as you wish.
+
+COMMENTS:  Nothing on a line after a semicolon is read, and you can have an
+  arbitrary number of extraneous semicolons.  Therefore, if you wish to comment
+  your data file, do so by placing your comments after a semicolon.
+
+SEMICOLONS:  A semicolon must terminate every statement except $SETUP, $DATA,
+  SEGMENT MARKERS and LABELS.
+
+RESERVED WORDS:  These words are reserved for use by the parser, do not
+  reference them as identifiers unless you precede the reference by an
+  apostrophe.  An apostrophe also allows you to reference a delimiter as an
+  identifier.
+
+  Reserved Words
+    $DATA       binenum         step
+    $SETUP      cont            to
+    ..          enum            ##
+    #           for             
+    ?           nseries         
+    binary      series
+

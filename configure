@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+#	Makefile Configuration Script
+#
+#	v1.0
+#	Matt White (mwhite@cmu.edu)
+#	June 20, 1996
+#
+#	This is a simple makefile configuration script that generates
+#       a file, for inclusion in a standard Makefile, that sets up some
+#       machine dependant options.  Simply run the script (or have the user
+#       run it) and include 'Makefile.inc' at the top of your regular
+#       Makefile.  Be sure to check what values are set and not change those
+#       values.
+#
+#       Currently, the values set by this utility are:
+#
+#            CC     -  Leave this alone, should have no need to reset this
+#            CFLAGS -  You can modify this variable by using the concatenation
+#                      operator, +=.
+#
+#       Configure accepts one parameter.  The first parameter is the machine
+#       type.  This value defaults to the output of 'uname'.  The output of
+#       this program is directed to stdout, informational messages go to
+#       stderr.
+
+if [ $# = 0 ] ; then
+  echo "$0: using uname." 1>&2
+  systype=`uname`
+  if [ $? != 0 ] ; then
+    echo "$0:" 1>&2
+    echo "uname does not exist on this system, you must specify system" 1>&2
+    echo "type on the command line.  Supported system types include:" 1>&2
+    echo "Digital Unix, FreeBSD, Linux and HP/UX." 1>&2
+    exit 1
+  fi
+  echo "$0: uname returned system type $systype" 1>&2
+elif [ $# = 1 ] ; then
+  systype=$1
+else
+  echo "usage: $0 [<system type>]." 1>&2
+  exit 1
+fi
+
+date=`date`
+echo "#"
+echo "#    Automatically Generated Makefile Include"
+echo "#    $date"
+echo "#"
+
+case $systype in
+  FreeBSD)  echo "$0: configuring for FreeBSD." 1>&2
+            echo "#    Configured for FreeBSD"
+	    echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS= -m486 -ansi -DFreeBSD"
+	    ;;
+  HP-UX)    echo "$0: configuring for HP/UX." 1>&2
+            echo "#    Configured for HP/UX"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-Aa -DHPUX"
+	    ;;
+  OSF1)     echo "$0: configuring for OSF/1." 1>&2
+            echo "#    Configured for OSF/1"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-std1 -ieee_with_no_inexact -DOSF1"
+	    ;;
+  Solaris)  echo "$0: configuring for Solaris." 1>&2
+            echo "#    Configured for Solaris"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-DSOLARIS"
+	    ;;
+  SunOS)    echo "$0: configuring for SunOS." 1>&2
+            echo "#    Configured for SunOS"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-DSUNOS"
+	    ;;
+  *)        echo "$0: configuring for Unknown System." 1>&2
+            echo "#    Configured for an Unknown System Type"
+	    echo
+	    echo "CC=gcc"
+	    echo "MACHDEP_CFLAGS="
+	    ;;
+esac
+
+echo "INSTALL_DIR=$INSTALL_DIR"
+
+echo "$0: configuration complete!" 1>&2
+exit 0

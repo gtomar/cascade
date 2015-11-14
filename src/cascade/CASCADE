@@ -1,0 +1,548 @@
+CMU Cascade Neural Network Simulator
+
+v1.0
+Matt White (mwhite+@cmu.edu)
+May 28, 1995
+
+COMMENTS/QUESTIONS: neural-bench@cs.cmu.edu
+Note:  Please do not send me personal mail with regards to
+       this program.  All correspondance should be directed
+       to 'neural-bench@cs.cmu.edu', which will reach me.
+
+Introduction
+------------
+This program implements the Cascade-Correlation, Recurrent
+Cascade-Correlation, Cascade-2 and the Recurrent Cascade-2 learning
+algorithms.  The code is based upon that written by Scott Fahlman,
+Scott Crowder, Peter McCluskey, Conor Doherty and Michael Kingsley.
+
+This code has been placed in public domain by its author.  As a
+matter of simple courtesy, anyone using or adapting this code is
+expected to acknowledge the source.  The author would like to hear
+about any attempts to use this system, successful or not.
+
+The code is currently being maintained by the site contact listed
+above.  If you find a bug, add a useful feature, or discover a hack 
+that will increase system performance, please contact the person at 
+the address listed above so that the distribution source may be
+modified accordingly.
+
+The most recent version of this and other neural network code can be
+retrieved, along with data files and technical reports, via the world
+wide web at:
+
+	http://legend.gwydion.cs.cmu.edu:8001/neural-bench/
+
+or via FTP at:
+
+	ftp.cs.cmu.edu:/afs/cs/project/connect/code  (source code),
+	ftp.cs.cmu.edu:/afs/cs/project/connect/bench (data files),
+and     ftp.cs.cmu.edu:/afs/cs/project/connect/tr    (technical reports)
+
+
+Version Log
+-----------
+1.0	mjw/5.28.95	Initial release.
+
+
+Compiling CNNS
+--------------
+A makefile is provided to aid in the compilation.  It may be
+necessary to modify the values for CC and CFLAGS in this makefile to get the
+code to compile correctly on your machine.  CC refers to the compiler
+used and CFLAGS represents the arguments passed to that compiler.
+These constants should be set so that they reflect an IEEE and ANSI
+compliant compiler on your machine (for example, the DEC Alpha uses:
+CC=cc, CFLAGS=-std1 -ieee_with_no_inexact).
+
+Once these values are set correctly, you should be able to type 'make'
+and let the computer build the appropriate files for you.  You will
+see compilation messages for a number of files and then a final
+linking of these object files into an executable.  There should be no
+warning messages during compilation or linking.  The name of the
+executable will be 'cascade'.  Place this file somewhere in your
+path.
+
+Connection Crossing Statistics:  By default, CNNS maintains statistics
+about how many connection crossings are performed during training.  If
+for some reason you do not want this information, it must be disabled
+during compilation.  To do this, add the argument '-DNO_CONNX' to your
+'CFLAGS' constant.
+
+
+Running CNNS
+------------
+To start CNNS, type 'cascade' at your shell prompt.  You should be
+presented with an opening banner such as:
+
+	CMU Cascade Neural Network Simulator v1.0
+	  Question/Comments: neural-bench@cs.cmu.edu
+	  Compiled May 28 1995 at 13:51:12.
+	  Connection crossing statistics ENABLED.
+
+	Cascade v1.0  Command Line Interface
+	'?' for a list of parameters and commands.
+	cli> 
+
+The 'cli>' is the command line interface (CLI) prompt.  From this
+prompt it is possible to start training runs, load and inspect
+networks and data, and a number of other tasks.  This is also
+the place to change learning parameters.
+
+Changing Parameters
+===================
+To change a parameter, type the parameter's name at the CLI prompt,
+followed by the new value you wish that parameter to have.  If you
+omit the value for the parameter, the program will remind you of the type
+of parameter and its current value and then ask for a new value.  Type
+in the new value and hit enter (or just hit enter to abort the change).
+
+Parameters can have one of seven types:
+Integer    - The value expected is an integer value.
+Float      - The value expected is a floating point number.
+Boolean    - The value expected is a boolean (true/false) value.  True,
+	     yes, on, false, no, off are all legal values for boolean
+	     parameters.
+Node       - The value expected is a node type, or activation function.
+	     Possible values are Sigmoid, Asigmoid, Linear, Gaussian,
+	     VarSigmoid or Varied.
+Algorithm  - The value expected is an algorithm name.  Acceptable
+	     values are cascor, cascade2 and cascade-2. 
+Error Type - The value expected is an error measure.  Currently
+	     supported error measures are 'bits' and 'index'.
+Function   - Not a parameter value, but rather a procedure that
+             performs some task, such as training a network.  More
+             details on functions are available below.
+
+Details of specific parameters and functions are given below.
+
+Training
+========
+To begin training with CNNS, use the 'train' command.  The train
+command takes two arguments, the name of the network and the name of
+the data file containing the training data.  The simulator first
+checks to see if the data has been previously loaded.  If the data has
+been loaded, the loaded data is used.  If the data does not exist in
+memory, it is loaded from disk and parsed.  All data files must be in
+the format described in the 'DATA-FORMAT' file.
+
+Once the data file is loaded, the program looks for a network with the
+name you specified.  If such a network is not found in memory, it is
+created.  The created network will have input and output dimensions
+appropriate to the data file specified.  If a network is found in
+memory, but it does not have input and output dimensions that match
+the data file, an error will be signalled and training aborted.
+
+After both the network and data file are ready for training, the
+simulator will prompt you as to whether you would like to 'sync' the
+network and the data file.  Synchronizing insures that the network's
+outputs are of a reasonable type and that both the network and the
+data file represent enumerated data types in the same way.  In general,
+you should answer in the affirmative to this question (this is assumed
+if you hit enter or have the 'interact' parameter set to false).
+
+Once the program has received this information from you, there will be
+a brief pause while it creates the data structures for training.
+Training will then commence immediately.  Progress reports will be
+displayed at the end of each cycle.
+
+An example of training a network on the 'xor' problem:
+
+cli> train bob xor.data
+CMU Learning Benchmark Archive
+Data File Parser  v2.0 (5/5/95)
+
+Opening 'xor.data'...Lexing...Parsing...Interpreting...Done!
+Sync net outputs to data set (Yn)? y
+
+
+Trial 1 begun at Mon May 29 13:12:31 1995
+
+
+  End Output Training Cycle (Stagnant)
+    Epoch: 18           Connection crossings: 216
+    Error bits: 4  Sum squared diffs: 1.000  Sum squared error: 0.122
+    Output  1:     0.000    -0.000     0.000  
+
+  Validation Epoch
+    Error bits: 4       Sum sq diffs: 1.000     Sum sq error: 0.122
+    Best sum sq error: 0.000    Passes until stagnation: 12
+
+  End Candidate Training Cycle (Stagnant)
+    Epoch: 37           Connection crossings: 2064
+    Adding unit: 2      Unit type: Sigmoid      Score:    1.428
+    Unit  4:    -8.988    18.241    18.402  
+
+
+  End Output Training Cycle (Win)
+    Epoch: 43           Connection crossings: 2176
+    Error bits: 0  Sum squared diffs: 0.417  Sum squared error: 0.043
+    Output  1:    -0.575     1.453     1.453    -3.041  
+
+  End Trial Results
+    Epochs: 43  Average epoch time: 0.00 sec (INF epochs/sec)
+    Connection crossings: 2176  Crossings per second: INF
+    Total units: 4                      Hidden units: 1
+    Test results:     Sum sq diffs: 0.417       Sum sq error: 0.043
+                      Error bits: 0             Percent correct: 100.00
+
+Trial 1 ended at Mon May 29 13:12:31 1995
+
+Some interpretation:
+
+Error bits              - the number of incorrect output values.
+Sum Squared Differences - the sum of the squared differences between
+                          output units and their goals.
+Sum Squared Errors      - For Cascade-2, this is the same as the sum
+                          squared differences.  For
+                          Cascade-Correlation, it is the sum of the
+                          squared errors computed by multiplying the
+                          activation prime by the difference between 
+	                  the output and its goal.
+Unit type               - The type of unit being added to the network.
+                          This is useful when varied candiate types
+                          are being used.
+Score                   - Score of the winning candidate.  The higher
+                          this value, the more interesting the feature
+                          detected.  As scores go to zero, new feature
+                          detectors add little to the powers of the 
+                          network.
+
+Scripts
+=======
+CNNS has a notion of a script, which is a sequence of CLI commands
+that are executed in order.  A script can be used to store
+parameters for a run as well as commands for batch processing.  A script is
+run from the CLI by using the 'loadScript' function described below.
+
+A second way to load scripts is to specify them on the command line.
+Any number of script file names may be specified when CNNS is invoked.
+The scripts will be executed in the order in which they are specified
+on the command line.  This is useful for batch processing where the
+program is unable to interact with the user.
+
+To create a script, simply type lines into a text file in the same
+manner you would type them in at the CLI.  A script can consist of any
+combination of parameters and functions.  Only one entry can exist per
+line and lines beginning with a '#' are ignored.  Scripts may be
+nested.
+
+Two things to keep in mind when writing scripts for batch processing
+are that CNNS sometimes prompts the user for information and that CNNS
+does not exit upon completion of a script.  To keep CNNS from
+prompting for information, set the parameter 'interact' to FALSE.
+When interaction is turned off, cascade attempts to make reasonable
+assumptions about any ambiguities that arise.  To force CNNS to exit
+at the completion of a script, put 'quit yes' as the last line in the
+script.
+
+
+Functions
+---------
+There are a number of procedures that perform critical roles in
+training networks.  These functions are provided via the CLI like any
+other parameter.  All functions take from zero to two arguments and
+will prompt for such if they are ommitted.  A description of the
+functions follows:
+
+?/list      - No arguments.  List changeable parameters and their
+              values.  Also lists available functions.
+exit/quit   - One argument: confirmation ("yes").  Quit the program.
+inspectData - One argument: the data file to inspect.  Display the
+	      critical information about a data file that is loaded 
+	      in memory.
+inspectNet  - One argument: the network to inspect.  Display
+              information about the weights and structure of a network
+              that is loaded in memory.
+killData    - One argument: the data file to remove from memory.
+              Removes a data file and its associated data sets from 
+              memory.
+killNet     - One argument: the network to remove from memory.
+              Removes a network from memory.
+listData    - No arguments.  List the data files currently loaded in memory.
+listNets    - No arguments.  List the networks currently loaded in memory.
+loadData    - One argument: the name of the data file to load.  Loads
+              and parses a data file.  The data file is added to those
+              that reside in memory.
+loadNet     - One argument: the name of the network file to load.
+              Load a network from disk.  The network is added to those
+              stored in memory as long as there does not already exist
+              a network in memory with the same name.
+loadScript  - One argument: the name of the script to execute.  Load
+              and execute a script.
+predictNet  - One argumnet: the name of the file containing the
+              prediction data.  Perform feedforward prediction on the
+              prediction data stored within the data file specified.
+query       - One argument: the name of the network to query.  Query
+              the specified network.  The query module is described below.
+resizeNet   - Two arguments: the name of the network to resize and the
+              number of hidden units to add to its capacity.  When a network is
+              built, it has a limited amount of memory allocated for new units.
+              Should this memory prove insufficient, memory for
+              additional units may be added using this function.
+runTrials   - Two arguments: the number of trials to run and the file
+              name of the training data to use.  Train a number of
+              networks on the data.  This is used to collect
+              performance data for benchmarking purposes.
+saveNet     - Two arguments: the name of the network to save and the
+              name of the file in which to save the network.  This
+              function creates a file on disk that contains the
+              information necessary to restore a network to memory
+              later.  Modify at your own risk!
+saveScript  - One argument: the name of the file in which to store the
+              parameters.  This function stores the values of all
+              parameters as a script file.  Functions and the results
+              of their calls are not saved.
+syncNet     - Two arguments: the name of the network and the data file
+              to synchronize with.  This function allows the manual
+              synchronization of a network to a data file as described
+              under the section on 'Training'.
+testNet     - Two arguments: the name of the network and the name of
+              the data file that contains the testing data.  Run a
+              test epoch manually and report on the results.
+train       - Two arguments: the name of the network to train and the
+              name of the data file containing the training data.
+              Train the network specified on the training data located
+              within the file specified.  See 'Training' for details. 
+
+abort       - Only works during training.  Aborts the current training
+              run and returns to the CLI prompt.
+continue    - Only works during training.  Continue with training.
+
+
+Query Mode
+----------
+Allows the interactive querying of a trained network.  Query mode is
+entered through the CLI.  There are only three commands available at
+the the query mode prompt: input, rawinput, exit.  These three
+functions allow the user to obtain the queried network's reaction to
+any combination of stimuli the user desires.
+
+Syntax:
+
+  input [reset] <input tokens>
+  rawinput [reset] <input floating point numbers>
+  exit
+
+Input accepts a list of tokens as would appear in a data file.  Output
+is provided with both symbolic tokens and raw output values.  Rawinput
+has similar output, but accepts instead as input a list of floating
+point numbers which are used as inputs to the network.  Exit allows
+the user to return to the CLI.
+
+Both input and rawinput allow, as the first input token, the keyword
+'reset'.  Reset forces recurrent networks to reset and not use the
+state that they have built up.  The reset token has no effect in
+non-recurrent networks.
+
+An example of querying the network 'bob' which we previously trained
+on the 'XOR' problem:
+
+Querying 'bob'.  Type 'exit' to return to CLI.
+Query bob> input +,-
+Raw output: 0.124 
+Tokenized output: +
+Query bob> input +,+
+Raw output: -0.220 
+Tokenized output: -
+Query bob> rawinput 0.4 0.35
+Raw output: -0.205 
+Tokenized output: -
+Query bob> exit
+
+
+Appendix A: Setting Learning Parameters
+---------------------------------------
+Herein lays the collected wisdom about setting parameters for
+Cascade-Correlation and Cascade-2 networks.  Take this information as
+a basis from which to begin setting parameters and not as complete
+rules for doing so.
+
+algorithm (Cascor, Cascade-2)
+  The Cascade-Correlation algorithm is generally the more solid of the two
+learning algorithms.  Cascade-2 shows strength with problems that have
+real valued outputs.
+
+When setting parameters for Cascade-Correlation, set only the 'candIn'
+parameters for candidate training, the 'candOut' parameters are
+ingnored.  Cascade-2 makes use of both 'candIn' and 'candOut'
+parameters.
+
+candChgThresh (Float)
+  candChgThresh is a measure of how much the score of the best
+candidate unit must change from its previous best before this change
+is considered significant.  Detecting significant change is important
+for stagnation calculation.
+
+candEpochs/outputEpochs (Integer)
+  These parameters refer to the number of epochs to run in each phase
+before declaring a TIMEOUT.  In general, the network should stagnate
+before this occurs.  If you receive a number of 'Timeout' results
+during training, it may be necessary to increase one of these
+parameters.
+ 
+candInDecay/candOutDecay/outputDecay (Float)
+  Decay is the amount that the slope for the appropriate weight is
+decayed each epoch.  This has the effect of shrinking weights.  If
+weights are becoming very large, it is often useful to set a *small*
+(0.0001 or less) decay term to curb that growth.
+
+On some problems that lack enough training data to get good
+generalization, it may be possible to get better generalization by
+setting a somewhat larger decay term (0.01 or so).  There is no
+scientific evidence that this helps and empirical results could very
+well be due to luck.
+
+candInEpsilon/candOutEpsilon/outputEpsilon (Float)
+  Epsilon is the learning rate used during training.  The value is
+internally scaled by fan-in before it is used.
+
+Epsilon can be a tricky parameter to set.  It can vary over many
+orders of magnitude, depending on the problem (i.e. from 1000 to 0.01
+or so).  During training, you want to see steady improvement in the
+error measure or score.  You'll occaisonally see an epoch or two in
+which the score retreats from the best obtained so far, but if the
+lost ground isn't made up in the next few epochs, you're probably in a
+chaotic region and need to reduce the epsilon that is relevant to the
+current learning phase.  If you see steady but weak convergence,
+especially near the end of the training phase, you probably want to
+turn epsilon up.  For Cascade-2 learning, try setting candInEpsilon to
+approximately ten times the value of candOutEpsilon.
+
+candInMu/candOutMu/outputMu (Float)
+  Mu is the maximum growth factor described in Fahlman's paper, "An
+Empirical Study of Learning Speed in Back-Propagation Networks".  No
+weight is allowed to grow more than mu times the previous step taken.
+This prevents a series of changes in the same direction from fooling
+quickprop into making an extremely large weight change.  In general,
+it is best to set this parameter to 2.0 and leave it there.  If
+training seems determined to oscillate, turn the relevant mu down
+to 1.75 or 1.5.  Values higher than 2.0 are very uncommon.
+
+candPatience/outputPatience (Integer)
+  Candidate and output patience are the number of epochs to continue
+training without noticeable improvement before it is declared stagnant
+and stopped.  How to set patience depends on how complicated the space
+is and whether you place more emphasis on minimal learning time or
+minimal units.  Even if you want minimal learning time, you want to
+set the patience high enough that there's not much more to be squeezed
+out of each training phase -- extra units cost more time than you save
+by keeping patience low.  This parameter is often set to 12 or 15 with
+good results.
+
+candType (Node)
+  'candType' is the type of unit to use to compose the candidate pool.
+Currently available units are: SIGMOID [-0.5, 0.5], ASIGMOID [0.0,
+1.0], VARSIGMOID [sigMin, sigMax] and GAUSSIAN [0.0, 1.0].  In
+addition, selecting type VARIED will cause a mixed pool of candidates
+to be used.
+
+errorIndexThresh (Float)
+  'errorIndexThresh' is the error index to beat when the scoring
+method is an index (used for continuous valued outputs).  Training is
+stopped and victory declared when the error index falls below
+'errorIndexThresh'.
+
+errorMeasure (Error Type)
+  'errorMeasure' is used to determine the correctness of the network's
+responses to inputs.  A measure of value of BITS means that the number
+of incorrect outputs (not within 'errorScoreThreshold' of the correct
+response).  This error measure is usually used for networks with
+enumerated and binary outputs.  For networks with continuous outputs,
+the Lapedes and Faber [4] error INDEX is generally used instead.
+
+errorScoreThreshold (Float)
+  'errorScoreThreshold' is used to designate how close a binary output
+has to be to the correct value before it is considered correct.  The
+smaller this value, the closer the network has to be to the value
+specified in the data file.  Setting this parameter is just a question
+of how you want to report your results.  Usually leave it at 0.4,
+unless you want to compare results with an author who used some other
+value.  Making this value smaller for no good reason can result in
+over-training.
+
+interact (Boolean)
+  'interact' is a simulation control parameter that modifies how the
+program interacts with the user.  If 'interact' is set to true and an
+ambiguity arises, the program will query the user for a decision.  If
+interact is set to false, the program will attempt to make a
+reasonable decision and continue.  'interact' is usually only set to
+false when computation is taking place on some sort of batch
+processing system.
+
+maxNewUnits (Integer)
+  'maxNewUnits' is the number of new units to allocate space for in
+newly created networks.  This parameter is only referred to when the
+network is generated and has no effect on previously generated
+networks.  Additional units may be added to previously generated
+networks using the 'resizeNet' command.
+
+NCands (Integer)
+  'NCands' is the number of candidates to place in the training pool
+when training begins.  Since candidates are replaced in the pool as
+they are added to the network, this number is constant throughout
+training.
+
+outPrimeOffsest (Float)
+  'outPrimeOffset' is added to activation prime values to eliminate
+the flat spot in output training.  For more information on the
+benefits of adding an offset to the sigmoid prime values, see
+Fahlman's paper "An Empirical Study of Learning Speed in
+Back-Propagation Networks" [1].
+
+overshootOK (Boolean)
+  'overshootOK' determines whether the weight update function is
+allowed to overshoot its goal.  This should usually set to false.
+
+recurrent (Boolean)
+  'recurrent' indicates whether newly created networks should have
+recurrent connections in candidate units [3].  This allows the network to
+maintain state that approximates short term memory.
+
+sigMax/sigMin (Float)
+  These parameters are the maximum and minimum values that can be
+taken on by VARSIGMOID units.  These parameters should be set to
+reflect the data file the network is being trained on.
+
+test (Boolean)
+  Run a test epoch at the completion of training if testing data is
+available.  If this value is true and testing data is available, the
+results of the test epoch will be reported instead of the training
+results.
+
+useCache (Boolean)
+  Since the inputs to hidden units are frozen after the units are added to
+the network, the values of these units are necessarily consistant for
+specific input patterns.  Therefore, it is possible to cache the
+activation and error values for these units and save having to
+recompute them every epoch.  This can dramatically increase running
+speed.  If the training set is very large memory may be insufficient.
+This feature allows the cache to be disabled for these large data sets.
+
+validate (Boolean)
+  If validation data is present, run a cross-validation epoch after every
+candidate-output cycle.  If enough cycles pass without generalization
+on this data set improving, training is stopped and the network is
+restored to the state of its best generalization.
+
+validationPatience (Integer)
+  'validationPatience' is the number of candidate-output cycles to run
+without improvement before training is stopped as described in validate.
+
+weightRange (Float)
+  When the network and new candidates are initialized, they are set to
+random values in [-weightRange, weightRange].  It is usually not
+necessary to modify this parameter.
+
+
+Appendix B: References
+----------------------
+[1]  Fahlman, S. E. (1988) "Faster-Learning Variations on
+     Back-Propagation: An Empirical Study" in "Proceedings of the 1988
+     Connectionist Models Summer School", Morgan Kaufman.
+[2]  Fahlman, S. E. and C. Lebiere (1990) "The Cascade-Correlation
+     Learning Architecture" in D.S. Touretzky (ed.), "Advances in Neural
+     Information Processing Systems 2", Morgan Kaufman.
+[3]  Fahlman, S. E. (1991) "The Recurrent Cascade-Correlation
+     Architecture", CMU-CS-91-100.
+[4]  ???
