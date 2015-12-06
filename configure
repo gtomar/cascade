@@ -47,7 +47,7 @@ echo "#"
 echo "#    Automatically Generated Makefile Include"
 echo "#    $date"
 echo "#"
-
+echo $systype
 case $systype in
   FreeBSD)  echo "$0: configuring for FreeBSD." 1>&2
             echo "#    Configured for FreeBSD"
@@ -78,6 +78,18 @@ case $systype in
             echo
 	    echo "CC=cc"
 	    echo "MACHDEP_CFLAGS=-DSUNOS"
+	    ;;
+  Darwin)   echo "$0: configuring for Darwin." 1>&2
+            echo "#    Configured for Darwin"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-Ofast"
+	    ;;
+  Linux)   echo "$0: configuring for Linux." 1>&2
+            echo "#    Configured for Linux"
+            echo
+	    echo "CC=cc"
+	    echo "MACHDEP_CFLAGS=-O3"
 	    ;;
   *)        echo "$0: configuring for Unknown System." 1>&2
             echo "#    Configured for an Unknown System Type"
