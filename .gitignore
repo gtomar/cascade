@@ -33,5 +33,6 @@
 
 #Dropbox
 RemoteSystemsTempFiles/
-!/.DS_Store
-
+*.data
+.*
+!/.gitignore
