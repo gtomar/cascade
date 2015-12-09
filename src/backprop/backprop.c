@@ -508,10 +508,10 @@ int main() {
 
     	        /* train using batch training ( don't update weights, just cumulate them ) */
     	        //printf("training input:%d\n",i);
-    	        trainNet(0.01, 0, 0, outputTargets);
+    	        trainNet(0.01, 0, 1, outputTargets);
     	        counter++;
     	        /* apply batch changes after 1000 loops use .8 learning rate and .8 momentum */
-    	        //if(counter == 100) { applyBatchCumulations(.8,.8); counter = 0;}
+    	        if(counter == 100) { applyBatchCumulations(.8,.8); counter = 0;}
     	    }
 
     	    /* test it */
