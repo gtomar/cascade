@@ -34,6 +34,7 @@
 # data files
 #/data
 
+.DS_Store
 #Dropbox
 RemoteSystemsTempFiles/
 !/.DS_Store
