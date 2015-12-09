@@ -1,18 +1,13 @@
-// The network will be trained with following NN specifications:
-//
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <string.h>
-#define _GNU_SOURCE
 
-#define MAX_NO_OF_LAYERS 3 // 3 layers excluding the input layer: 784, 300, 100, 10
-#define MAX_NO_OF_INPUTS 784 // the images are 28*28
-#define MAX_NO_OF_NEURONS 410 // 300+100+10
-#define MAX_NO_OF_WEIGHTS 784*300 + 300*100 + 100*10 // sum up weights between each layer pair
-#define MAX_NO_OF_OUTPUTS 10 // the number of digits
+#define MAX_NO_OF_LAYERS 3
+#define MAX_NO_OF_INPUTS 2
+#define MAX_NO_OF_NEURONS 10
+#define MAX_NO_OF_WEIGHTS 31
+#define MAX_NO_OF_OUTPUTS 2
 
 void createNet( int, int *, int *, char *, double *, int );
 void feedNetInputs(double *);
@@ -23,7 +18,6 @@ void applyBatchCumulations( double, double );
 int loadNet(char *);
 int saveNet(char *);
 double getRand();
-void getTrainSet();
 
 struct neuron{
     double *output;
@@ -60,14 +54,14 @@ double getRand() {
 
 }
 
-static struct neuron netNeurons[MAX_NO_OF_NEURONS]; 			// array of all the neurons in the network
-static double netInputs[MAX_NO_OF_INPUTS]; 						// array of all inputs
-static double netNeuronOutputs[MAX_NO_OF_NEURONS]; 				// array of output of all neurons
-static double netErrors[MAX_NO_OF_NEURONS]; 					// array of errors on each neuron
-static struct layer netLayers[MAX_NO_OF_LAYERS]; 				// array of all layers in the network
-static double netWeights[MAX_NO_OF_WEIGHTS]; 					// array of weights
-static double netOldWeights[MAX_NO_OF_WEIGHTS]; 				// array of old weights
-static double netBatchCumulWeightChanges[MAX_NO_OF_WEIGHTS]; 	// array of weight deltas for each weight
+static struct neuron netNeurons[MAX_NO_OF_NEURONS];
+static double netInputs[MAX_NO_OF_INPUTS];
+static double netNeuronOutputs[MAX_NO_OF_NEURONS];
+static double netErrors[MAX_NO_OF_NEURONS];
+static struct layer netLayers[MAX_NO_OF_LAYERS];
+static double netWeights[MAX_NO_OF_WEIGHTS];
+static double netOldWeights[MAX_NO_OF_WEIGHTS];
+static double netBatchCumulWeightChanges[MAX_NO_OF_WEIGHTS];
 
 void createNet( int noOfLayers, int *noOfNeurons, int *noOfInputs, char *axonFamilies, double *actFuncFlatnesses, int initWeights ) {
 
@@ -96,7 +90,7 @@ void createNet( int noOfLayers, int *noOfNeurons, int *noOfInputs, char *axonFam
             if(i == theNet.noOfLayers-1 && j == 0) { // beginning of the output layer
                 theNet.outputs = &netNeuronOutputs[counter];
             }
-            netNeurons[counter].output = &netNeuronOutputs[counter]; // resume here, output is pointer to double
+            netNeurons[counter].output = &netNeuronOutputs[counter];
             netNeurons[counter].noOfInputs = noOfInputs[i];
             netNeurons[counter].weights = &netWeights[counter2];
             netNeurons[counter].netBatchCumulWeightChanges = &netBatchCumulWeightChanges[counter2];
@@ -373,176 +367,52 @@ int loadNet(char *path) {
 
 }
 
-void getTrainSet(double trainSetX[60000][784], double trainSetY[60000][1]) {
-
-	FILE * fp;
-	char * line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	int datum_counter = 0;
-	fp = fopen("../../data/trainset","r");
-	if (fp == NULL) exit(EXIT_FAILURE);
-	while ((read = getline(&line, &len, fp)) != -1) {
-		printf("train: reading datum:%d\n", datum_counter);
-		char * pch;
-		pch = strtok (line,",");
-		int datum_point = 0;
-		while (pch != NULL) {
-			if (datum_point < 784) {
-				trainSetX[datum_counter][datum_point] = atof(pch);
-			} else {
-				trainSetY[datum_counter][0] = atof(pch);
-			}
-			pch = strtok (NULL, ",");
-			datum_point += 1;
-		}
-		datum_counter += 1;
-	}
-	fclose(fp);
-	if (line) free(line);
-}
-
-
-void getTestSet(double testSetX[10000][784], double testSetY[10000][1]) {
-
-	FILE * fp;
-	char * line = NULL;
-	size_t len = 0;
-	ssize_t read;
-	int datum_counter = 0;
-	fp = fopen("../../data/testset","r");
-	if (fp == NULL) exit(EXIT_FAILURE);
-	while ((read = getline(&line, &len, fp)) != -1) {
-		printf("test: reading datum:%d\n", datum_counter);
-		char * pch;
-		pch = strtok (line,",");
-		int datum_point = 0;
-		while (pch != NULL) {
-			if (datum_point < 784) {
-				testSetX[datum_counter][datum_point] = atoi(pch);
-			} else {
-				testSetY[datum_counter][0] = atoi(pch);
-			}
-			pch = strtok (NULL, ",");
-			datum_point += 1;
-		}
-		datum_counter += 1;
-	}
-	fclose(fp);
-	if (line) free(line);
-}
-
-int maxIndex(const double *arr, int length) {
-    // returns the index of maximum value of array
-    int i;
-    double minimum = arr[0];
-    int min_index = 0;
-    for (i = 1; i < length; ++i) {
-        if (minimum > arr[i]) {
-            minimum = arr[i];
-            min_index = i;
-        }
-    }
-    return min_index;
-}
-
 int main() {
 
     double inputs[MAX_NO_OF_INPUTS];
     double outputTargets[MAX_NO_OF_OUTPUTS];
 
-
-
-    /* determine layer parameters */
+    /* determine layer paramaters */
     int noOfLayers = 3; // input layer excluded
-    int noOfNeurons[] = {300,100,10};
-    int noOfInputs[] = {784,300,100};
+    int noOfNeurons[] = {5,3,2};
+    int noOfInputs[] = {2,5,3};
     char axonFamilies[] = {'g','g','t'};
     double actFuncFlatnesses[] = {1,1,1};
 
     createNet(noOfLayers, noOfNeurons, noOfInputs, axonFamilies, actFuncFlatnesses, 1);
 
-    // load the train data
-
-    static double trainSetX[60000][784];
-    static double trainSetY[60000][1];
-    getTrainSet(trainSetX,trainSetY);
-
-    // load the test data
-
-    static double testSetX[10000][784];
-    static double testSetY[10000][1];
-    getTestSet(testSetX,testSetY);
-    int epoch;
-    for (epoch = 0; epoch < 10; epoch++) {
-
-    	printf("epoch:%d\n",epoch);
-
-    	int i;
-    	    double tempTotal;
-    	    int counter = 0;
-    	    printf("training...\n");
-    	    for(i = 0; i < 60000; i++) {
-
-    	    	// get the i-th training instance and store it in the input vector
-
-    	    	int j;
-    	    	for (j = 0; j < 784; j++) {
-    	    		inputs[j] = trainSetX[i][j];
-    	    	}
-
-    	        feedNetInputs(inputs);
-    	        updateNetOutput();
-
-    	        // make the outputTargets vector
-    	        double outputTargets[10];
-    	        int label = trainSetY[i][0];
-    	        //int j;
-    	        for (j = 0; j < 10; j++) {
-    	        	if (label-1 == j) {
-    	        		outputTargets[j] = 1.0;
-    	        	} else {
-    	        		outputTargets[j] = 0.0;
-    	        	}
-    	        }
-
-    	        /* train using batch training ( don't update weights, just cumulate them ) */
-    	        //printf("training input:%d\n",i);
-    	        trainNet(0.01, 0, 0, outputTargets);
-    	        counter++;
-    	        /* apply batch changes after 1000 loops use .8 learning rate and .8 momentum */
-    	        //if(counter == 100) { applyBatchCumulations(.8,.8); counter = 0;}
-    	    }
-
-    	    /* test it */
-    	    double *outputs;
-    	    int correct = 0;
-    	    int incorrect = 0;
-
-    	    for(i = 0; i < 10000; i++) {
-
-    	    	// make the input vector
-    	    	int j;
-    	    	for (j = 0; j < 784; j++) {
-    	    		inputs[j] = testSetX[i][j];
-    	    	}
-    	    	//printf("testing input:%d\n",i);
-    	        feedNetInputs(inputs);
-    	        updateNetOutput();
-    	        outputs = getOutputs();
-
-    	        // find the highest from the output and give that as the answer
-    	        int NNOutput = maxIndex(outputs,10);
-    	        int trueLabel = testSetY[i][0];
-    	        if (NNOutput == trueLabel) {
-    	        	correct++;
-    	        } else {
-    	        	incorrect++;
-    	        }
-    	    }
-    	    printf("accuracy:%f\n",(float)correct/(correct+incorrect));
+    /* train it using batch method */
+    int i;
+    double tempTotal;
+    int counter = 0;
+    for(i = 0; i < 1000000; i++) {
+        inputs[0] = getRand();
+        inputs[1] = getRand();
+        tempTotal = inputs[0] + inputs[1];
+        feedNetInputs(inputs);
+        updateNetOutput();
+        outputTargets[0] = (double)sin(tempTotal);
+        outputTargets[1] = (double)cos(tempTotal);
+        /* train using batch training ( don't update weights, just cumulate them ) */
+        trainNet(0, 0, 1, outputTargets);
+        counter++;
+        /* apply batch changes after 1000 loops use .8 learning rate and .8 momentum */
+        if(counter == 100) { applyBatchCumulations(.8,.8); counter = 0;}
     }
 
+    /* test it */
+    double *outputs;
+    printf("Sin Target \t Output \t Cos Target \t Output\n");
+    printf("---------- \t -------- \t ---------- \t --------\n");
+    for(i = 0; i < 50; i++) {
+        inputs[0] = getRand();
+        inputs[1] = getRand();
+        tempTotal = inputs[0] + inputs[1];
+        feedNetInputs(inputs);
+        updateNetOutput();
+        outputs = getOutputs();
+        printf( "%f \t %f \t %f \t %f \n", sin(tempTotal), outputs[0], cos(tempTotal), outputs[1]);
+    }
 
     return 0;
 
