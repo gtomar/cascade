@@ -258,8 +258,8 @@ Revision History
 
 /*	Constant Definitions	*/
 
-#define MAX_TOKEN_LENGTH   21	/*  Maximum length of a character token   */
-#define MAX_LINE_LENGTH    256	/*  Maximum length of an input line       */
+#define MAX_TOKEN_LENGTH   210	/*  Maximum length of a character token   */
+#define MAX_LINE_LENGTH    25600	/*  Maximum length of an input line       */
 #define NUM_LOOKUP_ENTRIES 27	/*  Number of entries in the lookup table */
 #define NUM_DELIMITERS     9	/*  Number of single character delimiters */
 #define NOT_FOUND          -1	/*  Item not found                        */
@@ -1750,7 +1750,7 @@ data_file_t *interp  ( float binPos, float binNeg,
   char        *fn = "Interpret Data File";
   int         i;
 
-  fprintf (stderr,"Interpreting...");
+  fprintf (stderr,".....$Interpreting$...");
   fflush  (stderr);
 
   /*  Allocate memory for and initialize the new data set.  */
@@ -1789,7 +1789,7 @@ data_file_t *interp  ( float binPos, float binNeg,
 
   /*  Deallocate memory for the parse tree  */
 
-  freePTree( parseTree );
+  //freePTree( parseTree );
   parseTree = NULL;
 
   fprintf (stderr,"Done!\n");
