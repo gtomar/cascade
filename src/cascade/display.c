@@ -67,7 +67,7 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
     printf  ("    Error index: %.3f  ", err->index);
   printf  ("Sum squared diffs: %.3f  Sum squared error: %.3f\n",
 	   err->sumSqDiffs, err->sumSqError);
-
+  /*
   for  ( i = 0 ; i < net->Noutputs ; i++ )  {
     printf  ("    Output %2d:  ",i+1);
     j = 0;
@@ -79,7 +79,7 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
       else if ( (j % 6) == 0 )
 	printf  ("\n                ");
     }
-  }
+  }*/
   printf ("\n");
 }
 
