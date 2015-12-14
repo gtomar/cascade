@@ -92,7 +92,10 @@ void display_validate_results  ( trial_result_t res, error_t measure,
 {
   printf  ("  Validation Epoch\n");
   if  ( measure == BITS )
-    printf  ("    Error bits: %d\t", res.bits);
+  {
+    printf  ("    Error bits: %d\t\n", res.bits);
+    printf  ("    Error count: %d\t\n", res.error_count);
+  }
   else
     printf  ("    Error index: %.3f\t", res.index);
   printf  ("Sum sq diffs: %.3f\tSum sq error: %.3f\n",res.sumSqDiffs,
@@ -123,14 +126,14 @@ void display_traincand_results ( net_t *net, train_data_t *tData,
 	   tData->candBestScore);
 
   printf  ("    Unit %2d:  ", net->Nunits);
-  while  ( i < (net->Nunits-1+net->recurrent) )  {
+  /*while  ( i < (net->Nunits-1+net->recurrent) )  {
     printf  ("%8.3f  ", net->weights [net->Nunits-1][i]);
     i++;
     if  ( i == (net->Nunits-1+net->recurrent) )
       printf ("\n");
     else if  ( ( i % 6 ) == 0 )
       printf ("\n              ");
-  }
+  }*/
   printf ("\n");
 }
 
@@ -158,9 +161,12 @@ void display_trial_results  ( trial_result_t res, int trialNum, boolean test,
     printf ("    Training results: ");
   printf ("Sum sq diffs: %.3f\tSum sq error: %.3f\n", res.sumSqDiffs,
 	  res.sumSqError);
-  if  ( measure == BITS )
+  if  ( measure == BITS ) {
     printf ("                      Error bits: %d\t\tPercent correct: %.2f\n",
 	    res.bits, res.perCorrect);
+  	printf ("                      Error count: %d\n",
+	    res.error_count);
+  }
   else
     printf ("                      Error index: %.2f\n", res.index);
 

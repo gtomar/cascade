@@ -304,7 +304,8 @@ typedef struct {
            connx,        /*  Number of connection crossings                  */
            time,         /*  Training time                                   */
            Nvictories,   /*  Number of victories achieved                    */
-           Nunits;       /*  Number of units in the network                  */
+           Nunits,       /*  Number of units in the network                  */
+           error_count;  /* Number of train patterns classified incorrectly  */
   float    perCorrect,   /*  Percent of training outputs correct             */
            index,        /*  Error index after last epoch                    */
            sumSqDiffs,   /*  Sum of the Square of the Differences            */
@@ -349,6 +350,7 @@ void         c2_find_best_cand           ( void );
 void         forward_pass       ( float *, boolean );
 void         compute_outputs    ( void );
 void         compute_error      ( float *, boolean, boolean, boolean, float );
+void         compute_normal_error      ( float *, int * );
 void         quickprop          ( float *, float *, float *, float *,
 			          float, float, float, float );
 float        activation         ( node_t, float );

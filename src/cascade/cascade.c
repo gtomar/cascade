@@ -111,6 +111,7 @@ trial_result_t  train_net  ( net_t *net, train_parm_t *parms,
                  **valBWeights; /*  Output weights at peak performance  */
   boolean        init = TRUE;   /*  Initialize the validation function?  */
 
+
   /*  Initialize for training  */
 
   tData = build_train_data ( net, parms, dFile->train->Npts );
@@ -180,6 +181,7 @@ trial_result_t  train_net  ( net_t *net, train_parm_t *parms,
       dFile->test = dFile->train;
     testRes = test_net( net, dFile->test );
     result.bits       = testRes.bits;
+    result.error_count= testRes.error_count;
     result.index      = testRes.index;
     result.sumSqDiffs = testRes.sumSqDiffs;
     result.sumSqError = testRes.sumSqError;
@@ -229,6 +231,7 @@ trial_result_t  test_net    ( net_t *net, data_set_t *dSet )
   net_t          *tempNet;	/*  Pointer to old network  */
   trial_result_t result;	/*  Results of testing  */
   int            i;		/*  Indexing variable  */
+  int            error_count;
 
   /*  Save pointers to old information  */
   err     = build_error_data( net );
@@ -237,11 +240,14 @@ trial_result_t  test_net    ( net_t *net, data_set_t *dSet )
   tempNet = cNet;
   cNet    = net;
 
+  error_count = 0;
+
   /*  Compute an epoch on the test data  */
   init_error( cError, net->Noutputs );
   for  ( i = 0 ; i < dSet->Npts ; i++ )  {
     forward_pass( dSet->data[i].inputs, cDSet->data[i].reset );
     compute_error( dSet->data[i].outputs, TRUE, FALSE, TRUE, 0.4999 );
+    compute_normal_error( dSet->data[i].outputs, &error_count);
   }
 
   /*  Store results and return global pointers to their old values  */
@@ -250,6 +256,7 @@ trial_result_t  test_net    ( net_t *net, data_set_t *dSet )
 				   (dSet->Npts)*Noutputs );
   result.sumSqDiffs = cError->sumSqDiffs;
   result.sumSqError = cError->sumSqError;
+  result.error_count = error_count;
   cError            = temp;
   free_error_data( &err );
   cNet              = tempNet;

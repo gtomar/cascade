@@ -127,6 +127,37 @@ void compute_error  ( float *goal, boolean alterStats, boolean alterSlopes,
   }
 }
 
+void compute_normal_error  ( float *goal, int *error_count )
+{
+  float val;
+  int   i;
+
+  int max_val_idx, max_goal_idx;
+  float max_val, max_goal;
+
+  max_val_idx = 0;
+  max_goal_idx = 0;
+
+  max_val = cNet->outValues[0];
+  max_goal = goal[0];
+
+  for  ( i = 0 ; i < Noutputs ; i++ )  {
+    val   = cNet->outValues[i];
+    if( val > max_val) {
+    	max_val = val;
+    	max_val_idx = i;
+    }
+
+    if( goal[i] > max_goal) {
+    	max_goal = goal[i];
+    	max_goal_idx = i;
+    }
+  }
+
+  if(max_val_idx != max_goal_idx){
+	  (*error_count)++;
+  }
+}
 
 /*  QUICKPROP -  Perform a quickprop update on a weight.  Pointers to the
     weight, delta, slope, and previous slope values should be passed to the
