@@ -10,14 +10,109 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "cascade.h"
 #include "toolkit.h"
+
 
 #ifdef CONNX
 extern int connx;
 #endif
 
+#define LOG_PRINT(...) log_print(__FILE__, __LINE__, __VA_ARGS__ )
+
+
+FILE *fp ;
+static int SESSION_TRACKER; //Keeps track of session
+
+net_t        *cNet;
+data_file_t   *cDFile;
+
+char* print_time()
+{
+    time_t t;
+    char *buf;
+
+    time(&t);
+    buf = (char*)malloc(strlen(ctime(&t))+ 1);
+
+    snprintf(buf,strlen(ctime(&t)),"%s ", ctime(&t));
+
+    return buf;
+}
+void log_print(char* filename, char *fmt,...)
+{
+    va_list         list;
+    char            *p, *r;
+    int             e;
+
+    if(SESSION_TRACKER > 0)
+      fp = fopen (filename,"a+");
+    else
+      fp = fopen (filename,"w");
+
+    fprintf(fp,"%s ",print_time());
+    va_start( list, fmt );
+
+    for ( p = fmt ; *p ; ++p )
+    {
+        if ( *p != '%' )//If simple string
+        {
+            fputc( *p,fp );
+        }
+        else
+        {
+            switch ( *++p )
+            {
+            /* string */
+            case 's':
+            {
+                r = va_arg( list, char * );
+
+                fprintf(fp,"%s", r);
+                continue;
+            }
+
+            /* integer */
+            case 'd':
+            {
+                e = va_arg( list, int );
+
+                fprintf(fp,"%d", e);
+                continue;
+            }
+
+            /* float */
+            case 'f':
+            {
+                e = va_arg( list, double );
+                printf("Float %f", e);
+                fprintf(fp,"%f", e);
+                continue;
+            }
+
+            /* long */
+            case 'l':
+            {
+                e = va_arg( list, long long int );
+                fprintf(fp,"%lld", e);
+                continue;
+            }
+
+            default:
+                fputc( *p, fp );
+            }
+        }
+    }
+    va_end( list );
+    //fprintf(fp," [%s][line: %d] ",filename,line);
+    fputc( '\n', fp );
+    SESSION_TRACKER++;
+    fclose(fp);
+}
 
 /*  DISPLAY BANNER -  Prints out the program's welcome banner.
 */
@@ -40,7 +135,8 @@ void display_banner  ( void )
 
 void display_begin_trial  ( int trialNum, time_t startTime )
 {
-  printf ("\n\nTrial %d begun at %s\n", trialNum, ctime( &startTime ));
+  printf("\n\n %s Trial %d begun at %s\n", cNet->name, trialNum, ctime( &startTime ));
+  log_print("log.txt","floating number %f ", (double) 88.33);
 }
 
 
@@ -52,6 +148,9 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
 				 status_t stat, error_t measure )
 {
   int i, j;
+  char logfilename[80];
+  strcpy(logfilename, cNet->name);
+  strcat(logfilename, "_log.txt");
 
   printf  ("\n  End Output Training Cycle (%s)\n", stoa( stat ) );
   printf  ("    Epoch: %d", net->epochsTrained);
@@ -90,7 +189,10 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
 void display_validate_results  ( trial_result_t res, error_t measure,
 				 float bestErr, int passesLeft)
 {
-  printf  ("  Validation Epoch\n");
+  char logfilename[80];
+  strcpy(logfilename, cNet->name);
+  strcat(logfilename, "_val_log.txt");
+  printf  ("  Validation Epoch \n");
   if  ( measure == BITS )
   {
     printf  ("    Error bits: %d\t\n", res.bits);
@@ -102,6 +204,13 @@ void display_validate_results  ( trial_result_t res, error_t measure,
 	   res.sumSqError);
   printf  ("    Best sum sq error: %.3f\tPasses until stagnation: %d\n\n",
 	   bestErr, passesLeft);
+ float outVals           = (cDFile->validate->Npts) * (cNet->Noutputs);
+ //double error_bits_per = (((float)(outVals-res.bits))/outVals)*100.0;
+ //double error_count_per = (((float)(cDFile->validate->Npts-res.error_count))/cDFile->validate->Npts)*100.0;
+
+
+ log_print(logfilename,",%d,%d,%d,%d,%l", cNet->epochsTrained, cNet->Nunits - 784 - 1, res.bits,
+		 res.error_count,connx);
 }
 
 
@@ -218,3 +327,4 @@ void display_test_results  ( trial_result_t res )
   printf ("  Error index: %.2f\n", res.index);
 }
  
+
