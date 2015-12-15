@@ -48,6 +48,8 @@ void log_print(char* filename, char *fmt,...)
     va_list         list;
     char            *p, *r;
     int             e;
+    long long int   a;
+    double          b;
 
     if(SESSION_TRACKER > 0)
       fp = fopen (filename,"a+");
@@ -88,17 +90,17 @@ void log_print(char* filename, char *fmt,...)
             /* float */
             case 'f':
             {
-                e = va_arg( list, double );
-                printf("Float %f", e);
-                fprintf(fp,"%f", e);
+                b = va_arg( list, double );
+                //printf("Float %f", e);
+                fprintf(fp,"%f", b);
                 continue;
             }
 
             /* long */
             case 'l':
             {
-                e = va_arg( list, long long int );
-                fprintf(fp,"%lld", e);
+                a = va_arg( list, long long int );
+                fprintf(fp,"%lld", a);
                 continue;
             }
 
@@ -148,9 +150,9 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
 				 status_t stat, error_t measure )
 {
   int i, j;
-  char logfilename[80];
+  /*char logfilename[80];
   strcpy(logfilename, cNet->name);
-  strcat(logfilename, "_log.txt");
+  strcat(logfilename, "_train_log.txt");*/
 
   printf  ("\n  End Output Training Cycle (%s)\n", stoa( stat ) );
   printf  ("    Epoch: %d", net->epochsTrained);
@@ -179,6 +181,8 @@ void display_trainout_results  ( net_t *net, error_data_t *err,
 	printf  ("\n                ");
     }
   }*/
+  //log_print(logfilename, "\t%d\t%d\t%f\t%f\t%l", cNet->epochsTrained, cNet->Nunits - 784 - 1,
+  //		    error_bits_per, error_count_per,connx);
   printf ("\n");
 }
 
@@ -204,13 +208,12 @@ void display_validate_results  ( trial_result_t res, error_t measure,
 	   res.sumSqError);
   printf  ("    Best sum sq error: %.3f\tPasses until stagnation: %d\n\n",
 	   bestErr, passesLeft);
- float outVals           = (cDFile->validate->Npts) * (cNet->Noutputs);
- //double error_bits_per = (((float)(outVals-res.bits))/outVals)*100.0;
- //double error_count_per = (((float)(cDFile->validate->Npts-res.error_count))/cDFile->validate->Npts)*100.0;
+  float outVals           = (cDFile->validate->Npts) * (cNet->Noutputs);
+  double error_bits_per = (((float)(outVals-res.bits))/outVals)*100.0;
+  double error_count_per = (((float)(cDFile->validate->Npts-res.error_count))/cDFile->validate->Npts)*100.0;
 
-
- log_print(logfilename,",%d,%d,%d,%d,%l", cNet->epochsTrained, cNet->Nunits - 784 - 1, res.bits,
-		 res.error_count,connx);
+  log_print(logfilename, "\t%d\t%d\t%f\t%f\t%l", cNet->epochsTrained, cNet->Nunits - 784 - 1,
+		    error_bits_per, error_count_per,connx);
 }
 
 
@@ -221,7 +224,9 @@ void display_traincand_results ( net_t *net, train_data_t *tData,
 				 status_t stat )
 {
   int i = 0;
-
+  char logfilename[80];
+  strcpy(logfilename, cNet->name);
+  strcat(logfilename, "_cand_score_log.txt");
   printf  ("  End Candidate Training Cycle (%s)\n", stoa( stat ));
   printf  ("    Epoch: %d", net->epochsTrained);
 #ifdef CONNX
@@ -235,6 +240,7 @@ void display_traincand_results ( net_t *net, train_data_t *tData,
 	   tData->candBestScore);
 
   printf  ("    Unit %2d:  ", net->Nunits);
+  log_print(logfilename, "\t%f", tData->candBestScore);
   /*while  ( i < (net->Nunits-1+net->recurrent) )  {
     printf  ("%8.3f  ", net->weights [net->Nunits-1][i]);
     i++;

@@ -192,15 +192,15 @@ train_parm_t *build_parm ( void )
   temp->algorithm                     = CASCOR;
   temp->errorMeasure                  = BITS;
 
-  temp->candInUpdate.epsilon          = 0.02;
-  temp->candInUpdate.mu               = 1.5;
-  temp->candInUpdate.decay            = 0.0001;
-  temp->candOutUpdate.epsilon         = 0.02;
-  temp->candOutUpdate.mu              = 1.5;
-  temp->candOutUpdate.decay           = 0.0001;
-  temp->outputUpdate.epsilon          = 0.02;
-  temp->outputUpdate.mu               = 1.5;
-  temp->outputUpdate.decay            = 0.0001;
+  temp->candInUpdate.epsilon          = 100.0;
+  temp->candInUpdate.mu               = 2.0;
+  temp->candInUpdate.decay            = 0.000;
+  temp->candOutUpdate.epsilon         = 100.0;
+  temp->candOutUpdate.mu              = 2.0;
+  temp->candOutUpdate.decay           = 0.0;
+  temp->outputUpdate.epsilon          = 1.0;
+  temp->outputUpdate.mu               = 2.0;
+  temp->outputUpdate.decay            = 0.000;
 
   temp->candidateParm.epochs          = 2000;
   temp->candidateParm.patience        = 12;
